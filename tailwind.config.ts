@@ -43,6 +43,10 @@ const config: Config = {
         inter: ["var(--font-inter)"],
         "space-grotesk": ["var(--font-space-grotesk)"],
       },
+      backgroundImage: {
+        "auth-light": "url('/images/auth-light.png')",
+        "auth-dark": "url('/images/auth-dark.png')",
+      },
     },
   },
   plugins: [typography, animate],

@@ -5,12 +5,15 @@
     "source.fixAll.eslint": "explicit",
     "source.addMissingImports": "explicit"
   },
+
   "prettier.tabWidth": 2,
+  "prettier.singleAttributePerLine": true,
+  "prettier.printWidth": 80,
   "prettier.useTabs": false,
   "prettier.semi": true,
-  "prettier.singleQuote": false,
+  "prettier.singleQuote": true,
   "prettier.jsxSingleQuote": false,
-  "prettier.trailingComma": "es5",
+  "prettier.trailingComma": "all",
   "prettier.arrowParens": "always",
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

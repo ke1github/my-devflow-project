@@ -1,7 +1,7 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetClose,
@@ -10,9 +10,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import ROUTES from '@/constants/routes';
-import NavLinks from './NavLinks';
+} from "@/components/ui/sheet";
+import ROUTES from "@/constants/routes";
+import NavLinks from "./NavLinks";
 
 const MobileNavigation = () => {
   return (
@@ -31,10 +31,7 @@ const MobileNavigation = () => {
         className="background-light900_dark200 border-none"
       >
         <SheetTitle className="hidden">Navigation</SheetTitle>
-        <Link
-          href="/"
-          className="flex items-center gap-1"
-        >
+        <Link href="/" className="flex items-center gap-1">
           <Image
             src="/images/site-logo.svg"
             width={23}

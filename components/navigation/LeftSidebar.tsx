@@ -1,9 +1,9 @@
-import React from 'react';
-import NavLinks from './navbar/NavLinks';
-import ROUTES from '@/constants/routes';
-import Link from 'next/link';
-import { Button } from '../ui/button';
-import Image from 'next/image';
+import React from "react";
+import NavLinks from "./navbar/NavLinks";
+import ROUTES from "@/constants/routes";
+import Link from "next/link";
+import { Button } from "../ui/button";
+import Image from "next/image";
 
 const LeftSidebar = () => {
   return (

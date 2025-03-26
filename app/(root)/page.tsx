@@ -1,3 +1,4 @@
+import HomeFilter from '@/components/filters/HomeFilter';
 import LocalSearch from '@/components/search/LocalSearch';
 import { Button } from '@/components/ui/button';
 import ROUTES from '@/constants/routes';
@@ -20,11 +21,11 @@ const questions = [
   },
   {
     _id: 2,
-    title: 'How to Learn Next.js?',
-    description: 'I want to learn Next.js. Can anyone help me?',
+    title: 'How to Learn Javascript?',
+    description: 'I want to learn Javascript. Can anyone help me?',
     tags: [
-      { _id: 1, name: 'Next.js' },
-      { _id: 2, name: 'React' },
+      { _id: 1, name: 'Javascript' },
+      { _id: 2, name: 'Javascript' },
     ],
     author: { _id: 1, name: 'John Doe' },
     upvotes: 10,
@@ -38,11 +39,18 @@ interface SearchParams {
   searchParams: Promise<{ [key: string]: string }>;
 }
 const Home = async ({ searchParams }: SearchParams) => {
-  const { query = '' } = await searchParams;
+  const { query = '', filter = '' } = await searchParams;
 
-  const filteredQuestions = questions.filter((question) =>
-    question.title.toLowerCase().includes(query.toLowerCase()),
-  );
+  const filteredQuestions = questions.filter((question) => {
+    const matchesQuery = question.title
+      .toLowerCase()
+      .includes(query.toLowerCase());
+    const matchesFilter = filter
+      ? question.tags[0].name.toLowerCase() === filter.toLowerCase()
+      : true;
+
+    return matchesQuery && matchesFilter;
+  });
 
   return (
     <>
@@ -64,8 +72,9 @@ const Home = async ({ searchParams }: SearchParams) => {
           otherClasses="flex-1"
         />
       </section>
-      <span>Home Filters</span>
+      <HomeFilter />
       <div className="mt-10 flex w-full flex-col gap-6">
+        {/* Implementing Filtered Questions in detail */}
         {filteredQuestions.map((question) => (
           <h1 key={question._id}>{question.title}</h1>
         ))}

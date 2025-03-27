@@ -1,10 +1,10 @@
 @config "../tailwind.config.ts";
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
 body {
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 :root {
@@ -232,6 +232,10 @@ body {
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+}
+/* Card Wrapper */
+.card-wrapper {
+  @apply dark:bg-zinc-950 text-card-foreground rounded-lg shadow-lg;
 }
 
 /* Optional: Keep these definitions if you want to use them directly in HTML */

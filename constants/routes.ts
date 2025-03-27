@@ -6,8 +6,8 @@ const ROUTES = {
   ASK_QUESTION: "/ask-question",
   CONTACT: "/contact",
   TAGS: (id: string) => `/tags/${id}`, // /tags/1
-  REGISTER: "/register",
   PROFILE: (id: string) => `/profile/${id}`, // /profile/1
+  QUESTION: (id: string) => `/question/${id}`, // /question/1
   SETTINGS: "/settings",
   NOT_FOUND: "/404",
 };

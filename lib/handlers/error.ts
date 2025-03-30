@@ -20,7 +20,7 @@ const formatResponse = (
   };
 
   return responseType === 'api'
-    ? NextResponse.json(responseContent, { status })
+    ? NextResponse.json(responseContent, { status }) // API response if 'api' is specified then return JSON response else return server response
     : { status, ...responseContent };
 };
 
@@ -35,6 +35,7 @@ const handleError = (error: unknown, responseType: ResponseType = 'server') => {
   }
 
   if (error instanceof ZodError) {
+    // ZodError is a validation error from Zod library then we need to handle it by flattening the errors and formatting them
     const validationError = new ValidationError(
       error.flatten().fieldErrors as Record<string, string[]>,
     );

@@ -8,6 +8,22 @@ const API_BASE_URL =
 //creating api controller for users and accounts
 //this will be used in the app directory to fetch data from the api
 export const api = {
+  auth: {
+    oAuthSignIn: ({
+      user,
+      provider,
+      providerAccountId,
+    }: SignInWithOAuthParams) =>
+      fetchHandler(`${API_BASE_URL}/auth/signin-with-oauth`, {
+        method: 'POST',
+        body: JSON.stringify({
+          user,
+          provider,
+          providerAccountId,
+        }),
+      }),
+  },
+
   users: {
     getAll: () => fetchHandler(`${API_BASE_URL}/users`),
     getById: (id: string) => fetchHandler(`${API_BASE_URL}/users/${id}`),

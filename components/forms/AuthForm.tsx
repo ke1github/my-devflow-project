@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
+import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
 import {
   DefaultValues,
   FieldValues,
   Path,
   SubmitHandler,
   useForm,
-} from "react-hook-form";
-import { z, ZodType } from "zod";
+} from 'react-hook-form';
+import { z, ZodType } from 'zod';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -19,15 +19,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import ROUTES from "@/constants/routes";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import ROUTES from '@/constants/routes';
+import { ActionResponse } from '@/types/global';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface AuthFormProps<T extends FieldValues> {
   schema: ZodType<T>;
   defaultValues: T;
-  onSubmit: (data: T) => Promise<{ success: boolean }>;
-  formType: "SIGN_IN" | "SIGN_UP";
+  onSubmit: (data: T) => Promise<ActionResponse>;
+  formType: 'SIGN_IN' | 'SIGN_UP';
 }
 
 const AuthForm = <T extends FieldValues>({
@@ -36,16 +39,30 @@ const AuthForm = <T extends FieldValues>({
   formType,
   onSubmit,
 }: AuthFormProps<T>) => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as DefaultValues<T>,
   });
 
-  const handleSubmit: SubmitHandler<T> = async () => {
+  const handleSubmit: SubmitHandler<T> = async (data) => {
     // TODO: Authenticate User
+    const result = (await onSubmit(data)) as ActionResponse;
+    if (result?.success) {
+      toast.success(
+        formType === 'SIGN_IN'
+          ? 'Signed In Successfully'
+          : 'Signed Up Successfully',
+      );
+      router.push(ROUTES.HOME);
+    } else {
+      toast.error(`Error ${result?.status}`, {
+        description: result?.error?.message,
+      });
+    }
   };
 
-  const buttonText = formType === "SIGN_IN" ? "Sign In" : "Sign Up";
+  const buttonText = formType === 'SIGN_IN' ? 'Sign In' : 'Sign Up';
 
   return (
     <Form {...form}>
@@ -61,14 +78,14 @@ const AuthForm = <T extends FieldValues>({
             render={({ field }) => (
               <FormItem className="flex w-full flex-col gap-2.5">
                 <FormLabel className="paragraph-medium text-dark400_light700">
-                  {field.name === "email"
-                    ? "Email Address"
+                  {field.name === 'email'
+                    ? 'Email Address'
                     : field.name.charAt(0).toUpperCase() + field.name.slice(1)}
                 </FormLabel>
                 <FormControl>
                   <Input
                     required
-                    type={field.name === "password" ? "password" : "text"}
+                    type={field.name === 'password' ? 'password' : 'text'}
                     {...field}
                     className="paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 no-focus min-h-12 rounded-1.5 border"
                   />
@@ -84,15 +101,15 @@ const AuthForm = <T extends FieldValues>({
           className="primary-gradient paragraph-medium min-h-12 w-full rounded-2 px-4 py-3 font-inter !text-light-900"
         >
           {form.formState.isSubmitting
-            ? buttonText === "Sign In"
-              ? "Signin In..."
-              : "Signing Up..."
+            ? buttonText === 'Sign In'
+              ? 'Signin In...'
+              : 'Signing Up...'
             : buttonText}
         </Button>
 
-        {formType === "SIGN_IN" ? (
+        {formType === 'SIGN_IN' ? (
           <p>
-            Don't have an account?{" "}
+            Don't have an account?{' '}
             <Link
               href={ROUTES.SIGN_UP}
               className="paragraph-semibold primary-text-gradient"
@@ -102,7 +119,7 @@ const AuthForm = <T extends FieldValues>({
           </p>
         ) : (
           <p>
-            Already have an account?{" "}
+            Already have an account?{' '}
             <Link
               href={ROUTES.SIGN_IN}
               className="paragraph-semibold primary-text-gradient"

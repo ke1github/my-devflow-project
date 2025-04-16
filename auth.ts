@@ -90,7 +90,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       })) as ActionResponse;
 
       if (!success) return false;
-
       return true;
     },
   },

@@ -1,15 +1,16 @@
 // Amazing enterprise level tactic to avoid typos in route names
 const ROUTES = {
-  HOME: "/",
-  SIGN_IN: "/sign-in",
-  SIGN_UP: "/sign-up",
-  ASK_QUESTION: "/ask-question",
-  CONTACT: "/contact",
+  HOME: '/',
+  SIGN_IN: '/sign-in',
+  SIGN_UP: '/sign-up',
+  ASK_QUESTION: '/ask-question',
+  CONTACT: '/contact',
   TAGS: (id: string) => `/tags/${id}`, // /tags/1
   PROFILE: (id: string) => `/profile/${id}`, // /profile/1
-  QUESTION: (id: string) => `/question/${id}`, // /question/1
-  SETTINGS: "/settings",
-  NOT_FOUND: "/404",
+  QUESTION: (id: string) => `/questions/${id}`, // /question/1
+  SETTINGS: '/settings',
+  NOT_FOUND: '/404',
+  SIGN_IN_WITH_OAUTH: `signin-with-oauth`,
 };
 export default ROUTES;
 

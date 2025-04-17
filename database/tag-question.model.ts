@@ -8,8 +8,8 @@ export interface ITagQuestion {
 export interface ITagQuestionDocument extends ITagQuestion, Document {}
 const TagQuestionSchema = new Schema<ITagQuestion>(
   {
-    tag: { types: Schema.Types.ObjectId, ref: 'Tag', required: true },
-    question: { types: Schema.Types.ObjectId, ref: 'Question', required: true },
+    tag: { type: Schema.Types.ObjectId, ref: 'Tag', required: true },
+    question: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
   },
   { timestamps: true },
 );

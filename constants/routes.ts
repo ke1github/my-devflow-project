@@ -4,8 +4,11 @@ const ROUTES = {
   SIGN_IN: '/sign-in',
   SIGN_UP: '/sign-up',
   ASK_QUESTION: '/ask-question',
-  CONTACT: '/contact',
-  TAGS: (id: string) => `/tags/${id}`, // /tags/1
+  COLLECTION: '/collection',
+  COMMUNITY: '/community',
+  TAGS: '/tags',
+  JOBS: '/jobs',
+  TAG: (id: string) => `/tags/${id}`, // /tags/1
   PROFILE: (id: string) => `/profile/${id}`, // /profile/1
   QUESTION: (id: string) => `/questions/${id}`, // /question/1
   SETTINGS: '/settings',

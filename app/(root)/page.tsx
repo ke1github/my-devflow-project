@@ -6,8 +6,9 @@ import LocalSearch from '@/components/search/LocalSearch';
 import { Button } from '@/components/ui/button';
 import ROUTES from '@/constants/routes';
 
-import { auth } from '@/auth';
 import { getQuestions } from '@/lib/actions/question.action';
+import DataRenderer from '@/components/DataRenderer';
+import { EMPTY_QUESTION } from '@/constants/states';
 
 interface SearchParams {
   searchParams: Promise<{ [key: string]: string }>;
@@ -18,7 +19,7 @@ const Home = async ({ searchParams }: SearchParams) => {
 
   const { success, data, error } = await getQuestions({
     page: Number(page) || 1,
-    pagesize: Number(pagesize) || 10,
+    pageSize: Number(pagesize) || 10,
     query: query || '',
     filter: filter || '',
   });
@@ -46,28 +47,22 @@ const Home = async ({ searchParams }: SearchParams) => {
         />
       </section>
       <HomeFilter />
-      {success ? (
-        <div className="mt-10 flex w-full flex-col gap-6">
-          {questions && questions.length > 0 ? (
-            questions.map((question) => (
+      <DataRenderer
+        success={success}
+        error={error}
+        data={questions}
+        empty={EMPTY_QUESTION}
+        render={(questions) => (
+          <div className="mt-10 flex w-full flex-col gap-6">
+            {questions.map((question) => (
               <QuestionCard
-                key={question._id}
+                key={String(question._id)}
                 question={question}
               />
-            ))
-          ) : (
-            <div className="mt-10 flex w-full items-center justify-center">
-              <p className="text-dark-400_light700">No questions found</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="mt-10 flex w-full items-center justify-center">
-          <p className="text-dark-400_light700">
-            {error?.message || 'Failed to fetch questions'}
-          </p>
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      />
     </>
   );
 };

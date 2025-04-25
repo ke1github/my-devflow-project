@@ -48,3 +48,11 @@ interface RouteParams {
 // difference between params and searchParams is that params are the dynamic segments of the URL, while searchParams are the query parameters in the URL.
 // For example, in the URL /users/123?sort=asc, 123 is a param and sort=asc is a searchParam.
 // params are defined in the route file name (e.g. [id].ts), while searchParams are defined in the URL itself.
+
+interface PaginatedSearchParams {
+  page?: number;
+  pageSize?: number;
+  query?: string;
+  filter?: string;
+  sort?: string;
+}

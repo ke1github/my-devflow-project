@@ -1,12 +1,13 @@
-import { techMap } from '@/constants/techMap';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-function cn(...inputs: ClassValue[]) {
+import { techMap } from '@/constants/techMap';
+
+export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const getDeviconClassName = (techName: string) => {
+export const getDeviconClassName = (techName: string) => {
   const normalizedTechName = techName.replace(/[ .]/g, '').toLowerCase();
 
   return techMap[normalizedTechName]
@@ -14,22 +15,27 @@ const getDeviconClassName = (techName: string) => {
     : 'devicon-devicon-plain';
 };
 
-const getTimeStamp = (date: Date): string => {
+export const getTimeStamp = (createdAt: Date) => {
+  const date = new Date(createdAt);
   const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours} hours ago`;
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 30) return `${diffInDays} days ago`;
-  const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) return `${diffInMonths} months ago`;
-  const diffInYears = Math.floor(diffInMonths / 12);
+  const secondsAgo = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  return `${diffInYears} years ago`;
+  const units = [
+    { label: 'year', seconds: 31536000 },
+    { label: 'month', seconds: 2592000 },
+    { label: 'week', seconds: 604800 },
+    { label: 'day', seconds: 86400 },
+    { label: 'hour', seconds: 3600 },
+    { label: 'minute', seconds: 60 },
+    { label: 'second', seconds: 1 },
+  ];
+
+  for (const unit of units) {
+    const interval = Math.floor(secondsAgo / unit.seconds);
+    if (interval >= 1) {
+      return `${interval} ${unit.label}${interval > 1 ? 's' : ''} ago`;
+    }
+  }
+  return 'just now';
 };
-
-export { getTimeStamp, getDeviconClassName, cn };

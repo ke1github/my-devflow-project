@@ -1,6 +1,6 @@
 'use server';
 
-import mongoose, { FilterQuery } from 'mongoose';
+import mongoose, { Error, FilterQuery } from 'mongoose';
 
 import Question, { IQuestionDocument } from '@/database/question.model';
 import TagQuestion from '@/database/tag-question.model';
@@ -12,18 +12,22 @@ import {
   AskQuestionSchema,
   EditQuestionSchema,
   GetQuestionSchema,
+  IncrementViewsSchema,
   PaginatedSearchParamsSchema,
 } from '../validations';
 import {
   CreateQuestionParams,
   EditQuestionParams,
   GetQuestionParams,
+  IncrementViewsParams,
 } from '@/types/action';
 import {
   ActionResponse,
   ErrorResponse,
   PaginatedSearchParams,
 } from '@/types/global';
+import { revalidatePath } from 'next/cache';
+import ROUTES from '@/constants/routes';
 
 export async function createQuestion(
   params: CreateQuestionParams,
@@ -291,6 +295,35 @@ export async function getQuestions(
       success: true,
       data: { questions: JSON.parse(JSON.stringify(questions)), isNext },
     };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function incrementViews(
+  params: IncrementViewsParams,
+): Promise<ActionResponse<{ views: number }>> {
+  const validationResult = await action({
+    params,
+    schema: IncrementViewsSchema,
+  });
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { questionId } = validationResult.params!;
+  try {
+    const question = await Question.findById(questionId);
+    if (!question) {
+      throw new Error('Question not found');
+    }
+    question.views += 1;
+    await question.save();
+    // Revalidate the question page to update the views count
+    // This is a workaround for the Next.js revalidation issue
+    revalidatePath(ROUTES.QUESTION(questionId));
+
+    return { success: true, data: { views: question.views } };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }

@@ -6,7 +6,7 @@ import ROUTES from '@/constants/routes';
 import { getQuestion } from '@/lib/actions/question.action';
 import { formatNumber, getTimeStamp } from '@/lib/utils';
 import { RouteParams, Tag } from '@/types/global';
-import { View } from 'lucide-react';
+import View from './view';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';

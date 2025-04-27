@@ -19,10 +19,15 @@ import {
   ErrorResponse,
   PaginatedSearchParams,
 } from '@/types/global';
+import {
+  CreateQuestionParams,
+  EditQuestionParams,
+  GetQuestionParams,
+} from '@/types/action';
 
 export async function createQuestion(
   params: CreateQuestionParams,
-): Promise<ActionResponse<IQuestionDocument>> {
+): Promise<ActionResponse<Question>> {
   const validationResult = await action({
     params,
     schema: AskQuestionSchema,
@@ -194,7 +199,7 @@ export async function editQuestion(
 
 export async function getQuestion(
   params: GetQuestionParams,
-): Promise<ActionResponse<IQuestionDocument>> {
+): Promise<ActionResponse<Question>> {
   const validationResult = await action({
     params,
     schema: GetQuestionSchema,
@@ -208,7 +213,9 @@ export async function getQuestion(
   const { questionId } = validationResult.params!;
 
   try {
-    const question = await Question.findById(questionId).populate('tags');
+    const question = await Question.findById(questionId)
+      .populate('tags')
+      .populate('author', '_id name image');
 
     if (!question) {
       throw new Error('Question not found');
@@ -222,9 +229,7 @@ export async function getQuestion(
 
 export async function getQuestions(
   params: PaginatedSearchParams,
-): Promise<
-  ActionResponse<{ questions: IQuestionDocument[]; isNext: boolean }>
-> {
+): Promise<ActionResponse<{ questions: Question[]; isNext: boolean }>> {
   const validationResult = await action({
     params,
     schema: PaginatedSearchParamsSchema,

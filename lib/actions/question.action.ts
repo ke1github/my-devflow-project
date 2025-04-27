@@ -15,15 +15,15 @@ import {
   PaginatedSearchParamsSchema,
 } from '../validations';
 import {
-  ActionResponse,
-  ErrorResponse,
-  PaginatedSearchParams,
-} from '@/types/global';
-import {
   CreateQuestionParams,
   EditQuestionParams,
   GetQuestionParams,
 } from '@/types/action';
+import {
+  ActionResponse,
+  ErrorResponse,
+  PaginatedSearchParams,
+} from '@/types/global';
 
 export async function createQuestion(
   params: CreateQuestionParams,

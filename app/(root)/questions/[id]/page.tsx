@@ -1,5 +1,5 @@
 import TagCard from '@/components/cards/TagCard';
-import { Preview } from '@/components/editor/preview';
+import { Preview } from '@/components/editor/Preview';
 import Metric from '@/components/Metric';
 import UserAvatar from '@/components/UserAvatar';
 import ROUTES from '@/constants/routes';

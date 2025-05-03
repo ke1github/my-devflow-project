@@ -13,6 +13,7 @@ import { AnswerServerSchema, GetAnswersSchema } from '../validations';
 
 import action from '../handlers/action';
 import handleError from '../handlers/error';
+import { filter } from '@mdxeditor/editor';
 
 export async function createAnswer(
   params: AnswerParams,

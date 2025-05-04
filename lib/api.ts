@@ -1,7 +1,6 @@
 import { IAccount } from '@/database/account.model';
 import { fetchHandler } from './handlers/fetch';
 import { IUser } from '@/database/user.model';
-import { APIResponse } from '@/types/global';
 import { SignInWithOAuthParams } from '@/types/action';
 
 const API_BASE_URL =
@@ -75,11 +74,7 @@ export const api = {
       }),
   },
   ai: {
-    getAnswer: (
-      question: string,
-      content: string,
-      userAnswer?: string,
-    ): APIResponse<string> =>
+    getAnswer: (question: string, content: string, userAnswer?: string) =>
       fetchHandler(`${API_BASE_URL}/ai/answers`, {
         method: 'POST',
         body: JSON.stringify({ question, content, userAnswer }),

@@ -43,7 +43,10 @@ export async function createQuestion(
   }
 
   const { title, content, tags } = validationResult.params!;
-  const userId = validationResult instanceof Error ? null : validationResult?.session?.user?.id;
+  const userId =
+    validationResult instanceof Error
+      ? null
+      : validationResult?.session?.user?.id;
 
   const session = await mongoose.startSession();
   session.startTransaction();

@@ -18,6 +18,8 @@ import {
   HasVotedResponse,
 } from '@/types/action';
 import { ActionResponse, ErrorResponse } from '@/types/global';
+import { revalidatePath } from 'next/cache';
+import ROUTES from '@/constants/routes';
 
 export async function updateVoteCount(
   params: UpdateVoteCountParams,
@@ -105,9 +107,19 @@ export async function createVote(
       }
     } else {
       // If the user has not voted yet, create a new vote
-      await Vote.create([{ targetId, targetType, voteType, change: 1 }], {
-        session,
-      });
+      await Vote.create(
+        [
+          {
+            author: targetId,
+            actionId: targetType,
+            actionType: voteType,
+            voteType,
+          },
+        ],
+        {
+          session,
+        },
+      );
       await updateVoteCount(
         { targetId, targetType, voteType, change: 1 },
         session,
@@ -116,6 +128,8 @@ export async function createVote(
 
     await session.commitTransaction();
     session.endSession();
+
+    revalidatePath(ROUTES.QUESTION(targetId));
 
     return { success: true };
   } catch (error) {
@@ -151,15 +165,15 @@ export async function hasVoted(
       return {
         success: false,
         data: {
-          hasupVoted: false,
-          hasdownVoted: false,
+          hasUpvoted: false,
+          hasDownvoted: false,
         },
       };
     return {
       success: true,
       data: {
-        hasupVoted: vote.voteType === 'upvote',
-        hasdownVoted: vote.voteType === 'downvote',
+        hasUpvoted: vote.voteType === 'upvote',
+        hasDownvoted: vote.voteType === 'downvote',
       },
     };
   } catch (error) {

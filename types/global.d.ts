@@ -1,3 +1,4 @@
+import { use } from 'react';
 import { auth } from '@/auth';
 import { Answer } from '@/database/answer.model';
 import { NextRequest, NextResponse } from 'next/server';
@@ -67,4 +68,16 @@ interface Answer {
   createdAt: Date;
   upvotes: number;
   downvotes: number;
+}
+
+interface User {
+  _id: string;
+  name: string;
+  username: string;
+  email: string;
+  image?: string;
+  bio?: string;
+  location?: string;
+  portfolio?: string;
+  reputation?: number;
 }

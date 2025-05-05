@@ -53,3 +53,8 @@ export const EMPTY_ANSWERS = {
   message:
     'The answer board is empty. Make it rain with your brialliant answers.',
 };
+
+export const EMPTY_USERS = {
+  title: 'No Users Found',
+  message: ' You are the first one here. Invite your friends to join the fun!',
+};

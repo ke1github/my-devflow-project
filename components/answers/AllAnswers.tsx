@@ -5,12 +5,22 @@ import { EMPTY_ANSWERS } from '@/constants/states';
 import AnswerCard from '../cards/AnswerCard';
 import { AnswerFilters } from '@/constants/filters';
 import CommonFilter from '../filters/CommonFilter';
+import Pagination from '../Pagination';
 interface Props extends ActionResponse<Answer[]> {
+  page: number;
+  isNext: boolean;
   totalAnswers: number;
 }
 // The Props interface extends ActionResponse with a generic type of Answer[] and adds a totalAnswers property of type number.
 
-const AllAnswers = ({ data, success, error, totalAnswers }: Props) => {
+const AllAnswers = ({
+  page,
+  isNext,
+  data,
+  success,
+  error,
+  totalAnswers,
+}: Props) => {
   return (
     <div className="mt-11">
       <div className="flex items-center justify-between">
@@ -37,6 +47,11 @@ const AllAnswers = ({ data, success, error, totalAnswers }: Props) => {
             />
           ))
         }
+      />
+      {/* Pagination Component */}
+      <Pagination
+        page={page}
+        isNext={isNext || false}
       />
     </div>
   );

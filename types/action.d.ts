@@ -1,3 +1,4 @@
+import { Question } from '@/types/global';
 import { PaginatedSearchParams } from './global';
 
 interface SignInWithOAuthParams {
@@ -62,4 +63,7 @@ type HasVotedParams = Pick<CreateVoteParams, 'targetId' | 'targetType'>;
 interface HasVotedResponse {
   hasUpvoted: boolean;
   hasDownvoted: boolean;
+}
+interface CollectionBaseParams {
+  questionId: string;
 }

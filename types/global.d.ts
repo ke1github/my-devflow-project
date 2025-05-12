@@ -1,3 +1,4 @@
+import { Collection } from './../lib/validations';
 import { use } from 'react';
 import { auth } from '@/auth';
 import { Answer } from '@/database/answer.model';
@@ -80,4 +81,10 @@ interface User {
   location?: string;
   portfolio?: string;
   reputation?: number;
+}
+
+interface Collection {
+  _id: string;
+  author: string | Author;
+  question: Question;
 }

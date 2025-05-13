@@ -25,6 +25,10 @@ const config: Config = {
         'light-500': '#7B8EC8',
         'light-400': '#858EAD',
       },
+      link: {
+        '100': '#1DA1F2',
+      },
+
       boxShadow: {
         'light-100':
           '0px 12px 20px 0px rgba(184, 184, 184, 0.03), 0px 6px 12px 0px rgba(184, 184, 184, 0.02), 0px 2px 4px 0px rgba(184, 184, 184, 0.03)',

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import ROUTES from '@/constants/routes';
-import { getTimeStamp } from '@/lib/utils';
+import { cn, getTimeStamp } from '@/lib/utils';
 
 import { Preview } from '../editor/Preview';
 import UserAvatar from '../UserAvatar';
@@ -10,6 +10,10 @@ import { Suspense } from 'react';
 import Votes from '../votes/Votes';
 import { hasVoted } from '@/lib/actions/vote.action';
 
+interface Props extends Answer {
+  containerClasses?: string;
+  showReadMore?: boolean;
+}
 const AnswerCard = ({
   _id,
   author,
@@ -17,16 +21,19 @@ const AnswerCard = ({
   createdAt,
   upvotes,
   downvotes,
-}: Answer) => {
+  question,
+  containerClasses,
+  showReadMore = false,
+}: Props) => {
   const hasVotedPromise = hasVoted({
     targetId: _id,
     targetType: 'answer',
   });
 
   return (
-    <article className="light-border border-b py-10">
+    <article className={cn('light-border border-b py-10', containerClasses)}>
       <span
-        id={JSON.stringify(_id)}
+        id={`answer-${_id}`}
         className="hash-span"
       />
 
@@ -68,6 +75,12 @@ const AnswerCard = ({
       </div>
 
       <Preview content={content} />
+      {showReadMore && (
+        <Link
+          href={`${ROUTES.QUESTION(question)}#answer-${_id}`}
+          className="body-semibold relative z-10 font-space-grotesk text-primary-500 "
+        ></Link>
+      )}
     </article>
   );
 };

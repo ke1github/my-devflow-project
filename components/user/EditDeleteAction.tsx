@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { deleteQuestion } from '@/lib/actions/question.action';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -26,10 +27,11 @@ const EditDeleteAction = ({ type, itemId }: Props) => {
     // Handle edit action
     router.push(`/questions/${itemId}/edit`);
   };
-  const handleDelete = () => {
+  const handleDelete = async () => {
     // Handle delete action
     if (type === 'Question') {
       // Perform delete action for question
+      await deleteQuestion({ questionId: itemId });
       toast.success('Question deleted successfully');
     } else if (type === 'Answer') {
       // Perform delete action for answer // Call API to delete answer

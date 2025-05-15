@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { deleteAnswer } from '@/lib/actions/answer.action';
 import { deleteQuestion } from '@/lib/actions/question.action';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -35,6 +36,8 @@ const EditDeleteAction = ({ type, itemId }: Props) => {
       toast.success('Question deleted successfully');
     } else if (type === 'Answer') {
       // Perform delete action for answer // Call API to delete answer
+
+      await deleteAnswer({ answerId: itemId });
       toast.success('Answer deleted successfully');
     }
   };

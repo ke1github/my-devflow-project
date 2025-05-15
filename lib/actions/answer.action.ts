@@ -4,16 +4,26 @@ import mongoose from 'mongoose';
 import { revalidatePath } from 'next/cache';
 
 import ROUTES from '@/constants/routes';
-import { Question } from '@/database';
-import Answer, { IAnswerDocument } from '@/database/answer.model';
+import { Question, Vote } from '@/database';
 
-import { AnswerParams, GetAnswerParams } from '@/types/action';
+import {
+  AnswerParams,
+  DeleteAnswerParams,
+  GetAnswerParams,
+} from '@/types/action';
+
 import { ActionResponse, ErrorResponse } from '@/types/global';
-import { AnswerServerSchema, GetAnswersSchema } from '../validations';
+
+import {
+  AnswerServerSchema,
+  DeleteAnswerSchema,
+  GetAnswersSchema,
+} from '../validations';
 
 import action from '../handlers/action';
 import handleError from '../handlers/error';
 import { filter } from '@mdxeditor/editor';
+import Answer, { IAnswerDocument } from '@/database/answer.model';
 
 export async function createAnswer(
   params: AnswerParams,
@@ -30,7 +40,7 @@ export async function createAnswer(
   }
   // Extract the validated params and session
   const { questionId, content } = validationResult.params!;
-  const userId = validationResult?.session?.user?.id;
+  const userId = validationResult.session?.user?.id;
 
   const session = await mongoose.startSession(); //atomic transaction
   session.startTransaction();
@@ -46,7 +56,7 @@ export async function createAnswer(
       { session },
     );
     if (!newAnswer) {
-      throw new Error('Failed to create answer');
+      throw new Error('Failed to create the answer');
     }
     // Update the question with the new answer
     question.answers += 1;
@@ -126,6 +136,54 @@ export async function getAnswers(params: GetAnswerParams): Promise<
         totalAnswers,
       },
     };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function deleteAnswer(
+  params: DeleteAnswerParams,
+): Promise<ActionResponse> {
+  const validattionResult = await action({
+    params,
+    schema: DeleteAnswerSchema,
+    authorize: true,
+  });
+
+  if (validattionResult instanceof Error) {
+    return handleError(validattionResult) as ErrorResponse;
+  }
+  const { answerId } = validattionResult.params!;
+  const { user } = validattionResult.session!;
+
+  try {
+    // Implement the logic to delete the answer
+    const answer = await Answer.findById(answerId);
+    if (!answer) throw new Error('Answer not found');
+
+    if (answer.author.toString() !== user?.id)
+      throw new Error('You are not alllowed to delete this answer');
+
+    // reduce the question's answer count by 1
+    await Question.findByIdAndUpdate(
+      answer.question,
+      { $inc: { answers: -1 } },
+      { new: true },
+    );
+
+    // Delete the vote associated with the answer
+    await Vote.deleteMany({
+      actionId: answerId,
+      actionType: 'answer',
+    });
+
+    // Now delete the answer
+    await Answer.findByIdAndDelete(answerId);
+
+    // Revalidate the question page to reflect the new answer count
+    revalidatePath(`/profile/${user?.id}`);
+
+    return { success: true };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }

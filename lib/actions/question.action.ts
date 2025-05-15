@@ -1,13 +1,15 @@
 'use server';
 
-import mongoose, { Error, FilterQuery } from 'mongoose';
+import mongoose, { FilterQuery } from 'mongoose';
+import { revalidatePath } from 'next/cache';
 
+import { Answer, Collection, Vote } from '@/database';
 import Question, { IQuestionDocument } from '@/database/question.model';
 import TagQuestion from '@/database/tag-question.model';
 import Tag, { ITagDocument } from '@/database/tag.model';
+import action from '@/lib/handlers/action';
+import handleError from '@/lib/handlers/error';
 
-import action from '../handlers/action';
-import handleError from '../handlers/error';
 import {
   AskQuestionSchema,
   DeleteQuestionSchema,
@@ -15,23 +17,22 @@ import {
   GetQuestionSchema,
   IncrementViewsSchema,
   PaginatedSearchParamsSchema,
-} from '../validations';
+} from '@/lib/validations';
+
+import dbConnect from '../mongoose';
 import {
   CreateQuestionParams,
-  DeleteQuestionParams,
   EditQuestionParams,
   GetQuestionParams,
   IncrementViewsParams,
+  DeleteQuestionParams,
 } from '@/types/action';
+
 import {
   ActionResponse,
   ErrorResponse,
   PaginatedSearchParams,
 } from '@/types/global';
-import { revalidatePath } from 'next/cache';
-import ROUTES from '@/constants/routes';
-import dbConnect from '../mongoose';
-import { Collection, Vote, Answer, Interaction } from '@/database';
 
 export async function createQuestion(
   params: CreateQuestionParams,
@@ -47,10 +48,7 @@ export async function createQuestion(
   }
 
   const { title, content, tags } = validationResult.params!;
-  const userId =
-    validationResult instanceof Error
-      ? null
-      : validationResult?.session?.user?.id;
+  const userId = validationResult?.session?.user?.id;
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -221,6 +219,10 @@ export async function getQuestion(
     return handleError(validationResult) as ErrorResponse;
   }
 
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
   const { questionId } = validationResult.params!;
 
   try {
@@ -314,23 +316,28 @@ export async function incrementViews(
     params,
     schema: IncrementViewsSchema,
   });
+
   if (validationResult instanceof Error) {
     return handleError(validationResult) as ErrorResponse;
   }
 
   const { questionId } = validationResult.params!;
+
   try {
     const question = await Question.findById(questionId);
+
     if (!question) {
       throw new Error('Question not found');
     }
-    question.views += 1;
-    await question.save();
-    // Revalidate the question page to update the views count
-    // This is a workaround for the Next.js revalidation issue
-    revalidatePath(ROUTES.QUESTION(questionId));
 
-    return { success: true, data: { views: question.views } };
+    question.views += 1;
+
+    await question.save();
+
+    return {
+      success: true,
+      data: { views: question.views },
+    };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }
@@ -339,18 +346,20 @@ export async function incrementViews(
 export async function getHotQuestions(): Promise<ActionResponse<Question[]>> {
   try {
     await dbConnect();
+
     const questions = await Question.find()
       .sort({ views: -1, upvotes: -1 })
       .limit(5);
 
-    return { success: true, data: JSON.parse(JSON.stringify(questions)) };
+    return {
+      success: true,
+      data: JSON.parse(JSON.stringify(questions)),
+    };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }
 }
 
-// This function is used to delete a question and all its references
-// from the database. It also handles the deletion of related tags and votes.
 export async function deleteQuestion(
   params: DeleteQuestionParams,
 ): Promise<ActionResponse> {
@@ -366,77 +375,62 @@ export async function deleteQuestion(
 
   const { questionId } = validationResult.params!;
   const { user } = validationResult.session!;
-
-  // Create a Mongoose Session
   const session = await mongoose.startSession();
 
   try {
-    // implement logic here
-
     session.startTransaction();
 
     const question = await Question.findById(questionId).session(session);
     if (!question) throw new Error('Question not found');
 
-    if (question.author.toString() !== user?.id) {
+    if (question.author.toString() !== user?.id)
       throw new Error('You are not authorized to delete this question');
-    }
 
-    //delete references from collection
-    await Collection.deleteMany({
-      question: questionId,
-    }).session(session);
+    // Delete related entries inside the transaction
+    await Collection.deleteMany({ question: questionId }).session(session);
+    await TagQuestion.deleteMany({ question: questionId }).session(session);
 
-    //delete references from tag-question
-    await TagQuestion.deleteMany({
-      question: questionId,
-    }).session(session);
-
-    //For all the tags of the question, decrement the questions count
+    // For all tags of Question, find them and reduce their count
     if (question.tags.length > 0) {
       await Tag.updateMany(
         { _id: { $in: question.tags } },
         { $inc: { questions: -1 } },
-      ).session(session);
+        { session },
+      );
     }
 
-    // Remove all votes of the question
+    //  Remove all votes of the question
     await Vote.deleteMany({
       actionId: questionId,
       actionType: 'question',
     }).session(session);
 
-    // Remove all answers of the question and their votes
+    // Remove all answers and their votes of the question
     const answers = await Answer.find({ question: questionId }).session(
       session,
     );
+
     if (answers.length > 0) {
-      await Answer.deleteMany({
-        question: questionId,
-      }).session(session);
+      await Answer.deleteMany({ question: questionId }).session(session);
+
       await Vote.deleteMany({
         actionId: { $in: answers.map((answer) => answer.id) },
         actionType: 'answer',
       }).session(session);
     }
 
-    // Delete the question
     await Question.findByIdAndDelete(questionId).session(session);
 
-    //Commit the transaction
     await session.commitTransaction();
     session.endSession();
 
-    // Revalidate to reflect immediate changes in the UI
     revalidatePath(`/profile/${user?.id}`);
 
     return { success: true };
   } catch (error) {
-    // Rollback the transaction in case of an error
     await session.abortTransaction();
     session.endSession();
 
-    // Handle the error
     return handleError(error) as ErrorResponse;
   }
 }

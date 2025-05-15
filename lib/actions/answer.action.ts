@@ -22,7 +22,6 @@ import {
 
 import action from '../handlers/action';
 import handleError from '../handlers/error';
-import { filter } from '@mdxeditor/editor';
 import Answer, { IAnswerDocument } from '@/database/answer.model';
 
 export async function createAnswer(
@@ -84,19 +83,19 @@ export async function createAnswer(
 
 export async function getAnswers(params: GetAnswerParams): Promise<
   ActionResponse<{
-    answers: Answer[];
+    answers: IAnswerDocument[];
     isNext: boolean;
     totalAnswers: number;
   }>
 > {
-  const validattionResult = await action({
+  const validationResult = await action({
     params,
     schema: GetAnswersSchema,
   });
-  if (validattionResult instanceof Error) {
-    return handleError(validattionResult) as ErrorResponse;
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
   }
-  const { questionId, page = 1, pageSize = 10 } = params;
+  const { questionId, page = 1, pageSize = 10, filter } = validationResult.params!;
 
   const skip = (Number(page) - 1) * pageSize;
   const limit = pageSize;

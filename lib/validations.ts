@@ -1,4 +1,3 @@
-import { auth } from '@/auth';
 import { InteractionActionEnums } from '@/database/interaction.model';
 import { z } from 'zod';
 
@@ -7,11 +6,11 @@ export const SignInSchema = z.object({
   email: z
     .string()
     .min(1, { message: 'Username must be at least 2 characters.' })
-    .email({ message: 'Please enter a valid email address.' }),
+    .email({ message: 'Email is required.' }),
   password: z
     .string()
-    .min(6, { message: 'Password must be at least 6 characters.' })
-    .max(100, { message: 'Password must be less than 100 characters.' }),
+    .min(6, { message: 'Password must be at least 6 characters long.' })
+    .max(100, { message: 'Password cannot exceed 100 characters.' }),
 });
 
 export const SignUpSchema = z.object({
@@ -49,8 +48,8 @@ export const SignUpSchema = z.object({
 export const AskQuestionSchema = z.object({
   title: z
     .string()
-    .min(5, { message: 'Title is required.' })
-    .max(100, { message: 'Title cannot exceed 100 characters.' }),
+    .min(5, { message: 'Title must be at least 5 characters.' })
+    .max(130, { message: 'Title cannot exceed 130 characters.' }),
 
   content: z.string().min(1, { message: 'Content is required.' }),
   tags: z
@@ -58,9 +57,9 @@ export const AskQuestionSchema = z.object({
       z
         .string()
         .min(1, { message: 'Tag is required.' })
-        .max(30, { message: 'Tag cannot exceed 30 characters.' }),
+        .max(15, { message: 'Tag cannot exceed 15 characters.' }),
     )
-    .min(1, { message: 'At least one tag is required.' })
+    .min(1, { message: 'Add atleast one tag.' })
     .max(3, { message: 'Cannot add more than 3 tags.' }),
 });
 
@@ -71,19 +70,16 @@ export const UserSchema = z.object({
     .min(3, { message: 'Username must be at least 3 characters long.' }),
   email: z.string().email({ message: 'Please provide a valid email address.' }),
   bio: z.string().optional(),
-  image: z.string().url({ message: 'Please provide a valid URL.' }).optional(),
+  image: z.string().url({ message: 'Invalid Image URL.' }).optional(),
   location: z.string().optional(),
-  portfolio: z
-    .string()
-    .url({ message: 'Please provide a valid URL.' })
-    .optional(),
+  portfolio: z.string().url({ message: 'Invalid Portfolio URL.' }).optional(),
   reputation: z.number().optional(),
 });
 
 export const AccountSchema = z.object({
   userId: z.string().min(1, { message: 'User ID is required.' }),
   name: z.string().min(1, { message: 'Name is required.' }),
-  image: z.string().url({ message: 'Please provide a valid URL.' }).optional(),
+  image: z.string().url({ message: 'Invalid Image URL.' }).optional(),
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters long.' })
@@ -115,9 +111,7 @@ export const SignInWithOAuthSchema = z.object({
     username: z
       .string()
       .min(3, { message: 'Username must be at least 3 characters long.' }),
-    email: z
-      .string()
-      .email({ message: 'Please provide a valid email address.' }),
+    email: z.string().email({ message: 'Invalid email address.' }),
     image: z.string().url('Invalid image URL').optional(),
   }),
 });
@@ -131,8 +125,8 @@ export const GetQuestionSchema = z.object({
 });
 
 export const PaginatedSearchParamsSchema = z.object({
-  page: z.number().int().positive().default(1),
-  pageSize: z.number().int().positive().default(10),
+  page: z.number().min(1, 'Page must be atleast 1').default(1),
+  pageSize: z.number().min(1, 'Page size must be atleast 1').default(10),
   query: z.string().optional(),
   filter: z.string().optional(),
   sort: z.string().optional(),
@@ -142,13 +136,11 @@ export const GetTagQuestionsSchema = PaginatedSearchParamsSchema.extend({
   tagId: z.string().min(1, { message: 'Tag ID is required.' }),
 });
 export const IncrementViewsSchema = z.object({
-  questionId: z.string().min(1, { message: 'Question ID is required.' }),
+  questionId: z.string().min(1, 'Question ID is required.'),
 });
 
 export const AnswerSchema = z.object({
-  content: z
-    .string()
-    .min(100, { message: 'Answer has to have more than 100 characters.' }),
+  content: z.string().min(100, { message: 'Minimum 100 characters.' }),
 });
 
 export const AnswerServerSchema = AnswerSchema.extend({
@@ -161,25 +153,31 @@ export const GetAnswersSchema = PaginatedSearchParamsSchema.extend({
 export const AIAnswerSchema = z.object({
   question: z
     .string()
-    .min(5, { message: 'Question ID is required.' })
-    .max(130, { message: 'Question ID cannot exceed 130 characters.' }),
-  content: z
-    .string()
-    .min(100, { message: 'Answer has to have more than 100 characters.' }),
+    .min(5, { message: 'Question Title must be at least 5 characters.' })
+    .max(130, {
+      message: 'Question Title must not be longer than 130 characters.',
+    }),
+  content: z.string().min(100, {
+    message: 'Question description must have Minimum of 100 characters.',
+  }),
   userAnswer: z.string().optional(),
 });
 
 export const CreateVoteSchema = z.object({
-  targetId: z.string().min(1, { message: 'Target ID is required.' }),
+  targetId: z.string().min(1, 'Target ID is required.'),
   targetType: z.enum(['question', 'answer'], {
-    message: 'Invalid Target Type.',
+    message: 'Invalid Target Type. Must be question or answer.',
   }),
   voteType: z.enum(['upvote', 'downvote'], {
-    message: 'Invalid Vote Type.',
+    message: 'Invalid Vote Type. Must be upvote or downvote.',
   }),
 });
 export const UpdateVoteCountSchema = CreateVoteSchema.extend({
-  change: z.number().int().min(-1).max(1),
+  change: z
+    .number()
+    .int()
+    .min(-1, 'Change must be -1 (decrement) or 1 (increment)')
+    .max(1, 'Change must be -1 (decrement) or 1 (increment)'),
 });
 
 export const hasVotedSchema = CreateVoteSchema.pick({
@@ -188,11 +186,11 @@ export const hasVotedSchema = CreateVoteSchema.pick({
 });
 
 export const CollectionBaseSchema = z.object({
-  questionId: z.string().min(1, { message: 'Question ID is required.' }),
+  questionId: z.string().min(1, 'Question ID is required.'),
 });
 
 export const GetUserSchema = z.object({
-  userId: z.string().min(1, { message: 'User ID is required.' }),
+  userId: z.string().min(1, 'User ID is required.'),
 });
 
 export const GetUserQuestionsSchema = PaginatedSearchParamsSchema.extend({
@@ -203,7 +201,7 @@ export const GetUserAnswersSchema = PaginatedSearchParamsSchema.extend({
 });
 
 export const GetUserTagsSchema = z.object({
-  userId: z.string().min(1, { message: 'User ID is required.' }),
+  userId: z.string().min(1, 'User ID is required.'),
 });
 
 export const DeleteQuestionSchema = z.object({

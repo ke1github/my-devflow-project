@@ -1,4 +1,3 @@
-import { auth } from '@/auth';
 import { IInteractionDoc } from '@/database/interaction.model';
 import {
   CreateInteractionParams,

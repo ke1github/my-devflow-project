@@ -2,6 +2,7 @@
 
 import {
   ActionResponse,
+  Badges,
   ErrorResponse,
   PaginatedSearchParams,
 } from '@/types/global';
@@ -9,13 +10,14 @@ import { Answer, Question, User } from '@/database';
 import { GetUserSchema, PaginatedSearchParamsSchema } from '../validations';
 import action from '../handlers/action';
 import handleError from '../handlers/error';
-import mongoose, { FilterQuery, PipelineStage } from 'mongoose';
+import mongoose, { FilterQuery, PipelineStage, Types } from 'mongoose';
 import {
   GetUserAnswersParams,
   GetUserParams,
   GetUserQuestionsParams,
   GetUserTagsParams,
 } from '@/types/action';
+import { assignBadges } from '../utils';
 
 export async function getUsers(
   params: PaginatedSearchParams,
@@ -78,8 +80,6 @@ export async function getUsers(
 export async function getUser(params: GetUserParams): Promise<
   ActionResponse<{
     user: User;
-    totalQuestions: number;
-    totalAnswers: number;
   }>
 > {
   const validationResult = await action({
@@ -96,15 +96,10 @@ export async function getUser(params: GetUserParams): Promise<
 
     if (!user) throw new Error('User not found');
 
-    const totalQuestions = await Question.countDocuments({ author: userId });
-    const totalAnswers = await Answer.countDocuments({ author: userId });
-
     return {
       success: true,
       data: {
         user: JSON.parse(JSON.stringify(user)),
-        totalQuestions,
-        totalAnswers,
       },
     };
   } catch (error) {
@@ -206,13 +201,13 @@ export async function getUserTopTags(params: GetUserTagsParams): Promise<
   try {
     const pipeline: PipelineStage[] = [
       {
-        $match: { author: new mongoose.Types.ObjectId(userId) },
+        $match: { author: new mongoose.Types.ObjectId(userId) }, //Find User's Questions
       },
-      { $unwind: '$tags' },
+      { $unwind: '$tags' }, //Flattens the tags array
       {
         $group: {
           _id: '$tags',
-          count: { $sum: 1 },
+          count: { $sum: 1 }, //Count Occurrences of each tag
         },
       },
       {
@@ -227,8 +222,8 @@ export async function getUserTopTags(params: GetUserTagsParams): Promise<
         $unwind: '$tagInfo',
       },
 
-      { $sort: { count: -1 } },
-      { $limit: 1 },
+      { $sort: { count: -1 } }, //sort by most used tags
+      { $limit: 10 }, // Get the top 10 tags
       {
         $project: {
           _id: 'tagInfo._id',
@@ -243,6 +238,73 @@ export async function getUserTopTags(params: GetUserTagsParams): Promise<
       success: true,
       data: {
         tags: JSON.parse(JSON.stringify(tags)),
+      },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getUserStats(params: GetUserParams): Promise<
+  ActionResponse<{
+    totalQuestions: number;
+    totalAnswers: number;
+    badges: Badges;
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetUserSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = params;
+
+  try {
+    const [questionStats] = await Question.aggregate([
+      { $match: { author: new Types.ObjectId(userId) } },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+          upvotes: { $sum: '$upvotes' },
+          views: { $sum: '$views' },
+        },
+      },
+    ]);
+
+    const [answerStats] = await Answer.aggregate([
+      { $match: { author: new Types.ObjectId(userId) } },
+      {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+          upvotes: { $sum: '$upvotes' },
+        },
+      },
+    ]);
+
+    const badges = assignBadges({
+      criteria: [
+        { type: 'ANSWER_COUNT', count: answerStats.count },
+        { type: 'QUESTION_COUNT', count: questionStats.count },
+        {
+          type: 'QUESTION_UPVOTES',
+          count: questionStats.upvotes + answerStats.upvotes,
+        },
+        { type: 'TOTAL_VIEWS', count: questionStats.views },
+      ],
+    });
+
+    return {
+      success: true,
+      data: {
+        totalQuestions: questionStats.count,
+        totalAnswers: answerStats.count,
+        badges,
       },
     };
   } catch (error) {

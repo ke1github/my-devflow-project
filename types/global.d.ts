@@ -43,6 +43,7 @@ type ActionResponse<T = null> = {
 
 type SuccessResponse<T = null> = ActionResponse<T> & { success: true };
 type ErrorResponse = ActionResponse<undefined> & { success: false };
+
 type APIErrorResponse = NextResponse<ErrorResponse>;
 type APIResponse<T = null> = NextResponse<SuccessResponse<T> | ErrorResponse>;
 
@@ -67,10 +68,10 @@ interface Answer {
   _id: string;
   author: Author;
   content: string;
-  createdAt: Date;
   upvotes: number;
   downvotes: number;
   question: string;
+  createdAt: Date;
 }
 
 interface User {
@@ -92,8 +93,19 @@ interface Collection {
   question: Question;
 }
 
-interface BadgeCounts {
+interface Badges {
   GOLD: number;
   SILVER: number;
   BRONZE: number;
+}
+
+interface UrlQueryParams {
+  params: string;
+  key: string;
+  value: string | null;
+}
+
+interface RemoveUrlQueryParams {
+  params: string;
+  keysToRemove: string[];
 }

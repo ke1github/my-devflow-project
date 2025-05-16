@@ -4,11 +4,14 @@ import UserAvatar from '@/components/UserAvatar';
 import {
   getUser,
   getUserAnswers,
+  getUserStats,
   getUserQuestions,
   getUserTopTags,
 } from '@/lib/actions/user.action';
+
 import { notFound } from 'next/navigation';
 import dayjs from 'dayjs';
+
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { RouteParams } from '@/types/global';
@@ -21,7 +24,7 @@ import Pagination from '@/components/Pagination';
 import AnswerCard from '@/components/cards/AnswerCard';
 import TagCard from '@/components/cards/TagCard';
 
-const Profile = async ({ params, searchParams }: RouteParams) => {
+const ProfilePage = async ({ params, searchParams }: RouteParams) => {
   const { id } = await params;
 
   // ?id=123&page=1&pageSize=10
@@ -36,12 +39,17 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
 
   if (!success)
     return (
-      <div>
-        <div className="h1-bold text-dark100_light900">{error?.message}</div>
+      <div className="flex flex-col items-center justify-center gap-4">
+        <h1 className="h1-bold text-dark100_light900">User not found</h1>
+        <p className="paragraph-regular text-dark200_light800 max-w-md">
+          {error?.message}
+        </p>
       </div>
     );
 
-  const { user, totalQuestions, totalAnswers } = data!;
+  const { user } = data!;
+  const { data: userStats } = await getUserStats({ userId: id });
+
   const {
     success: userQuestionsSuccess,
     data: userQuestions,
@@ -84,42 +92,42 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
       <section className="flex flex-col-reverse items-start justify-between sm:flex-row">
         <div className="flex flex-col items-start gap-4 lg:flex-row">
           <UserAvatar
-            id={_id}
-            name={name}
-            imageUrl={image}
+            id={user._id}
+            name={user.name}
+            imageUrl={user.image}
             className="size-[140px] rounded-full object-cover"
             fallbackClassName="text-6xl fond-bolder"
           />
 
           <div className="mt-3">
-            <h2 className="h2-bold text-dark100_light900">{name}</h2>
+            <h2 className="h2-bold text-dark100_light900">{user.name}</h2>
             <p className="paragraph-regular text-dark200_light800">
-              @{username}
+              @{user.username}
             </p>
 
             <div className="mt-5 flex flex-wrap items-center justify-start gap-5">
-              {portfolio && (
+              {user.portfolio && (
                 <ProfileLink
                   imgUrl="/icons/link.svg"
-                  href={portfolio}
+                  href={user.portfolio}
                   title="Portfolio"
                 />
               )}
-              {location && (
+              {user.location && (
                 <ProfileLink
                   imgUrl="/icons/location.svg"
-                  title="Portfolio"
+                  title={user.location}
                 />
               )}
               <ProfileLink
                 imgUrl="/icons/calendar.svg"
-                title={dayjs(createdAt).format('MMMM YYYY')}
+                title={dayjs(user.createdAt).format('MMMM YYYY')}
               />
             </div>
 
-            {bio && (
+            {user?.bio && (
               <p className="paragraph-regular text-dark400_light800 mt-8">
-                {bio}
+                {user.bio}
               </p>
             )}
           </div>
@@ -137,9 +145,9 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
       </section>
 
       <Stats
-        totalQuestions={totalQuestions}
-        totalAnswers={totalAnswers}
-        badges={{ GOLD: 0, SILVER: 0, BRONZE: 0 }}
+        totalQuestions={userStats?.totalQuestions || 0}
+        totalAnswers={userStats?.totalAnswers || 0}
+        badges={userStats?.badges || { GOLD: 0, SILVER: 0, BRONZE: 0 }}
         reputationPoints={user.reputation || 0}
       />
       <section className="mt-10 flex gap-10">
@@ -186,7 +194,7 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
             />
             <Pagination
               page={page}
-              isNext={hasMoreQuestions}
+              isNext={hasMoreQuestions || false}
             />
           </TabsContent>
 
@@ -205,7 +213,7 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
                     <AnswerCard
                       key={answer._id}
                       {...answer}
-                      content={answer.content.slice(0, 27)}
+                      content={answer.content.slice(0, 270)}
                       containerClasses="card-wrapper rounded-[10px] px-7 py-9 sm:px-11"
                       showReadMore
                       showActionBtns={
@@ -224,14 +232,14 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
         </Tabs>
 
         <div className="flex w-full min-w-[250px] flex-1 flex-col max-lg:hidden">
-          <h3 className="h3-bold text-dark200_light900">Top Tech</h3>
+          <h3 className="h3-bold text-dark200_light900">Top Tags</h3>
           <div className="mt-7 flex flex-col gap-4">
             <DataRenderer
               data={tags}
               empty={EMPTY_TAGS}
               success={userTopTagsSuccess}
               error={userTopTagsError}
-              render={(TAGS) => (
+              render={(tags) => (
                 <div className="mt-3 flex w-full flex-col gap-4">
                   {tags.map((tag) => (
                     <TagCard
@@ -253,4 +261,4 @@ const Profile = async ({ params, searchParams }: RouteParams) => {
   );
 };
 
-export default Profile;
+export default ProfilePage;

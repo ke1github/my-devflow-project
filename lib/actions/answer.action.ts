@@ -23,6 +23,8 @@ import {
 import action from '../handlers/action';
 import handleError from '../handlers/error';
 import Answer, { IAnswerDocument } from '@/database/answer.model';
+import { after } from 'next/server';
+import { createInteraction } from './interaction.action';
 
 export async function createAnswer(
   params: AnswerParams,
@@ -60,6 +62,17 @@ export async function createAnswer(
     // Update the question with the new answer
     question.answers += 1;
     await question.save({ session });
+
+    // log the interaction
+    after(async () => {
+      await createInteraction({
+        action: 'post',
+        actionId: newAnswer._id.toString(),
+        actionTarget: 'answer',
+        authorId: userId as string,
+      });
+    });
+
     // Commit the transaction
     await session.commitTransaction();
     // Revalidate the question page to reflect the new answer count
@@ -95,7 +108,12 @@ export async function getAnswers(params: GetAnswerParams): Promise<
   if (validationResult instanceof Error) {
     return handleError(validationResult) as ErrorResponse;
   }
-  const { questionId, page = 1, pageSize = 10, filter } = validationResult.params!;
+  const {
+    questionId,
+    page = 1,
+    pageSize = 10,
+    filter,
+  } = validationResult.params!;
 
   const skip = (Number(page) - 1) * pageSize;
   const limit = pageSize;
@@ -178,6 +196,16 @@ export async function deleteAnswer(
 
     // Now delete the answer
     await Answer.findByIdAndDelete(answerId);
+
+    // log the interaction
+    after(async () => {
+      await createInteraction({
+        action: 'delete',
+        actionId: answerId,
+        actionTarget: 'answer',
+        authorId: user?.id as string,
+      });
+    });
 
     // Revalidate the question page to reflect the new answer count
     revalidatePath(`/profile/${user?.id}`);

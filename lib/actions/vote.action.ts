@@ -2,7 +2,7 @@
 
 import mongoose, { ClientSession } from 'mongoose';
 
-import { Answer, Question, Vote } from '@/database';
+import { Answer, Question } from '@/database';
 
 import action from '../handlers/action';
 import handleError from '../handlers/error';
@@ -20,6 +20,9 @@ import {
 import { ActionResponse, ErrorResponse } from '@/types/global';
 import { revalidatePath } from 'next/cache';
 import ROUTES from '@/constants/routes';
+import { after } from 'next/server';
+import { createInteraction } from './interaction.action';
+import Vote from '@/database/vote.model';
 
 export async function updateVoteCount(
   params: UpdateVoteCountParams,
@@ -46,10 +49,7 @@ export async function updateVoteCount(
       { new: true, session },
     );
 
-    if (!result)
-      return handleError(
-        new Error('Failed to update vote count'),
-      ) as ErrorResponse;
+    if (!result) throw new Error('Failed to update vote count');
 
     return { success: true };
   } catch (error) {
@@ -79,6 +79,13 @@ export async function createVote(
   session.startTransaction();
 
   try {
+    const Model = targetType === 'question' ? Question : Answer;
+
+    const contentDoc = await Model.findById(targetId).session(session);
+    if (!contentDoc) throw new Error('Content not Found');
+
+    const contentAuthorId = contentDoc.author.toString();
+
     const existingVote = await Vote.findOne({
       author: userId,
       actionId: targetId,
@@ -87,14 +94,14 @@ export async function createVote(
 
     if (existingVote) {
       if (existingVote.voteType === voteType) {
-        // If the user has already voted with the same voteType, remove the vote
+        // If the user is voting again with the same vote type, remove the vote
         await Vote.deleteOne({ _id: existingVote._id }).session(session);
         await updateVoteCount(
           { targetId, targetType, voteType, change: -1 },
           session,
         );
       } else {
-        // If the user has already voted with a different voteType, update the vote
+        // If the user is changing their vote , update the vote type and adjust the count
         await Vote.findByIdAndUpdate(
           existingVote._id,
           { voteType },
@@ -111,7 +118,7 @@ export async function createVote(
         );
       }
     } else {
-      // If the user has not voted yet, create a new vote
+      // First time vote creation
       await Vote.create(
         [
           {
@@ -121,9 +128,7 @@ export async function createVote(
             voteType,
           },
         ],
-        {
-          session,
-        },
+        { session },
       );
       await updateVoteCount(
         { targetId, targetType, voteType, change: 1 },
@@ -131,10 +136,21 @@ export async function createVote(
       );
     }
 
+    //log the interaction
+
+    after(async () => {
+      await createInteraction({
+        action: voteType,
+        actionId: targetId,
+        actionTarget: targetType,
+        authorId: contentAuthorId,
+      });
+    });
+
     await session.commitTransaction();
     session.endSession();
 
-    revalidatePath(ROUTES.QUESTION(targetId));
+    revalidatePath(`/questions/${targetId}`);
 
     return { success: true };
   } catch (error) {

@@ -325,7 +325,6 @@ export async function getQuestions(
 
   const filterQuery: FilterQuery<typeof Question> = {};
 
-  
   let sortCriteria = {};
 
   try {

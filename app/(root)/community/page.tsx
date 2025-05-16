@@ -14,6 +14,9 @@ const Community = async ({ searchParams }: RouteParams) => {
   // This is a placeholder component for the Community page
   const { page, pageSize, query, filter } = await searchParams;
 
+  // This is a placeholder error to simulate an error state
+  //throw new Error('Error');
+
   const { success, data, error } = await getUsers({
     page: Number(page) || 1,
     pageSize: Number(pageSize) || 10,

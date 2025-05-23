@@ -12,10 +12,12 @@ import {
   ActionResponse,
   ErrorResponse,
 } from '@/types/global';
+import { ITagDocument } from '@/database/tag.model';
+import { IQuestionDocument } from '@/database/question.model';
 
 export const getTags = async (
   params: PaginatedSearchParams,
-): Promise<ActionResponse<{ tags: Tag[]; isNext: boolean }>> => {
+): Promise<ActionResponse<{ tags: ITagDocument[]; isNext: boolean }>> => {
   const validationResult = await action({
     params,
     schema: PaginatedSearchParamsSchema,
@@ -26,18 +28,16 @@ export const getTags = async (
   }
 
   const { page = 1, pageSize = 10, query, filter } = params;
-
-  const skip = (Number(page) - 1) * pageSize;
+  const skip = (Number(page) - 1) * Number(pageSize);
   const limit = Number(pageSize);
 
-  const filterQuery: FilterQuery<typeof Tag> = {};
+  const filterQuery: FilterQuery<ITagDocument> = {};
 
   if (query) {
     filterQuery.$or = [{ name: { $regex: query, $options: 'i' } }];
   }
 
   let sortCriteria = {};
-
   switch (filter) {
     case 'popular':
       sortCriteria = { questions: -1 };
@@ -58,7 +58,6 @@ export const getTags = async (
 
   try {
     const totalTags = await Tag.countDocuments(filterQuery);
-
     const tags = await Tag.find(filterQuery)
       .sort(sortCriteria)
       .skip(skip)
@@ -81,7 +80,11 @@ export const getTags = async (
 export const getTagQuestions = async (
   params: GetTagQuestionsParams,
 ): Promise<
-  ActionResponse<{ tag: Tag; questions: Question[]; isNext: boolean }>
+  ActionResponse<{
+    tag: ITagDocument;
+    questions: IQuestionDocument[];
+    isNext: boolean;
+  }>
 > => {
   const validationResult = await action({
     params,
@@ -93,8 +96,7 @@ export const getTagQuestions = async (
   }
 
   const { tagId, page = 1, pageSize = 10, query } = params;
-
-  const skip = (Number(page) - 1) * pageSize;
+  const skip = (Number(page) - 1) * Number(pageSize);
   const limit = Number(pageSize);
 
   try {
@@ -110,7 +112,6 @@ export const getTagQuestions = async (
     }
 
     const totalQuestions = await Question.countDocuments(filterQuery);
-
     const questions = await Question.find(filterQuery)
       .select('_id title views answers upvotes downvotes author createdAt')
       .populate([

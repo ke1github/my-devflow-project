@@ -23,10 +23,14 @@ import {
   UpdateUserParams,
 } from '@/types/action';
 import { assignBadges } from '../utils';
+import { IQuestionDocument } from '@/database/question.model';
+import { IUserDocument } from '@/database/user.model';
+import { IAccountDocument } from '@/database/account.model';
+import { IAnswerDocument } from '@/database/answer.model';
 
 export async function getUsers(
   params: PaginatedSearchParams,
-): Promise<ActionResponse<{ users: User[]; isNext: boolean }>> {
+): Promise<ActionResponse<{ users: IUserDocument[]; isNext: boolean }>> {
   const validationResult = await action({
     params,
     schema: PaginatedSearchParamsSchema,
@@ -84,7 +88,7 @@ export async function getUsers(
 
 export async function getUser(params: GetUserParams): Promise<
   ActionResponse<{
-    user: User;
+    user: IUserDocument;
   }>
 > {
   const validationResult = await action({
@@ -114,7 +118,7 @@ export async function getUser(params: GetUserParams): Promise<
 
 export async function getUserQuestions(params: GetUserQuestionsParams): Promise<
   ActionResponse<{
-    questions: Question[];
+    questions: IQuestionDocument[];
     isNext: boolean;
   }>
 > {
@@ -153,7 +157,7 @@ export async function getUserQuestions(params: GetUserQuestionsParams): Promise<
 
 export async function getUserAnswers(params: GetUserAnswersParams): Promise<
   ActionResponse<{
-    answers: Answer[];
+    answers: IAnswerDocument[];
     isNext: boolean;
   }>
 > {
@@ -319,7 +323,7 @@ export async function getUserStats(params: GetUserParams): Promise<
 
 export async function updateUser(
   params: UpdateUserParams,
-): Promise<ActionResponse<{ user: User }>> {
+): Promise<ActionResponse<{ user: IUserDocument }>> {
   const validationResult = await action({
     params,
     schema: UpdateUserSchema,

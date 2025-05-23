@@ -17,6 +17,7 @@ import { Collection, Question } from '@/database';
 import { revalidatePath } from 'next/cache';
 import ROUTES from '@/constants/routes';
 import mongoose, { PipelineStage } from 'mongoose';
+import { ICollectionDocument } from '@/database/collection.model';
 
 export async function toggleSaveQuestion(
   params: CollectionBaseParams,
@@ -105,7 +106,9 @@ export async function hasSavedQuestion(
 
 export async function getSavedQuestions(
   params: PaginatedSearchParams,
-): Promise<ActionResponse<{ collection: Collection[]; isNext: boolean }>> {
+): Promise<
+  ActionResponse<{ collection: ICollectionDocument[]; isNext: boolean }>
+> {
   const validationResult = await action({
     params,
     schema: PaginatedSearchParamsSchema,

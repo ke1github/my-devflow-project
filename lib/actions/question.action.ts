@@ -42,7 +42,7 @@ import { cache } from 'react';
 
 export async function createQuestion(
   params: CreateQuestionParams,
-): Promise<ActionResponse<Question>> {
+): Promise<ActionResponse<IQuestionDocument>> {
   const validationResult = await action({
     params,
     schema: AskQuestionSchema,
@@ -225,7 +225,7 @@ export async function editQuestion(
 
 export const getQuestion = cache(async function getQuestion(
   params: GetQuestionParams,
-): Promise<ActionResponse<Question>> {
+): Promise<ActionResponse<IQuestionDocument>> {
   const validationResult = await action({
     params,
     schema: GetQuestionSchema,
@@ -311,7 +311,9 @@ export async function getRecommendedQuestions({
 
 export async function getQuestions(
   params: PaginatedSearchParams,
-): Promise<ActionResponse<{ questions: Question[]; isNext: boolean }>> {
+): Promise<
+  ActionResponse<{ questions: IQuestionDocument[]; isNext: boolean }>
+> {
   const validationResult = await action({
     params,
     schema: PaginatedSearchParamsSchema,
@@ -429,7 +431,9 @@ export async function incrementViews(
   }
 }
 
-export async function getHotQuestions(): Promise<ActionResponse<Question[]>> {
+export async function getHotQuestions(): Promise<
+  ActionResponse<IQuestionDocument[]>
+> {
   try {
     await dbConnect();
 

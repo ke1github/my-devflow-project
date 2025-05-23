@@ -134,3 +134,8 @@ interface UpdateUserParams {
   image?: string;
   password?: string;
 }
+
+interface JobFilterParams {
+  query: string;
+  page: string;
+}
